@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+    <title>Advanced Image Editor</title>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto p-6">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Professional Image Editor</h1>
+            <p class="text-gray-600">Advanced editing tools for your creative needs</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-12 gap-6">
+            <!-- Left Sidebar - Tools -->
+            <div class="col-span-2 bg-white rounded-lg shadow-sm p-4 space-y-4">
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-gray-700">Upload</h3>
+                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                    <label for="imageUpload" class="block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition cursor-pointer text-center">
+                        Choose File
+                    </label>
+                    <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-gray-500 text-sm hover:border-blue-500 transition-colors">
+                        Drag image here
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-gray-700">Basic Tools</h3>
+                    <button onclick="enableDrawing()" class="tool-btn">✏️ Draw</button>
+                    <button onclick="enableEraser()" class="tool-btn">🗑️ Erase</button>
+                    <button onclick="addText()" class="tool-btn">📝 Add Text</button>
+                    <button onclick="enableCrop()" class="tool-btn">✂️ Crop</button>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-gray-700">Transforms</h3>
+                    <button onclick="rotateImage(90)" class="tool-btn">↻ Rotate Right</button>
+                    <button onclick="rotateImage(-90)" class="tool-btn">↺ Rotate Left</button>
+                    <button onclick="flipImage('x')" class="tool-btn">↔️ Flip X</button>
+                    <button onclick="flipImage('y')" class="tool-btn">↕️ Flip Y</button>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-gray-700">Shapes</h3>
+                    <button onclick="addShape('rect')" class="tool-btn">⬜ Rectangle</button>
+                    <button onclick="addShape('circle')" class="tool-btn">⭕ Circle</button>
+                    <button onclick="addShape('triangle')" class="tool-btn">△ Triangle</button>
+                    <button onclick="addShape('line')" class="tool-btn">📏 Line</button>
+                </div>
+            </div>
+
+            <!-- Main Canvas Area -->
+            <div class="col-span-8 bg-white rounded-lg shadow-sm p-4">
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <canvas id="canvas" width="800" height="600"></canvas>
+                </div>
+                
+                <!-- History Controls -->
+                <div class="flex justify-center space-x-4 mt-4">
+                    <button onclick="undo()" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">↩️ Undo</button>
+                    <button onclick="redo()" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">↪️ Redo</button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Adjustments -->
+            <div class="col-span-2 bg-white rounded-lg shadow-sm p-4 space-y-4">
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-gray-700">Adjustments</h3>
+                    <div class="space-y-1">
+                        <label class="text-sm text-gray-600">Brightness</label>
+                        <input type="range" id="brightness" min="-100" max="100" value="0" class="w-full">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm text-gray-600">Contrast</label>
+                        <input type="range" id="contrast" min="-100" max="100" value="0" class="w-full">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm text-gray-600">Saturation</label>
+                        <input type="range" id="saturation" min="-100" max="100" value="0" class="w-full">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm text-gray-600">Blur</label>
+                        <input type="range" id="blur" min="0" max="10" value="0" class="w-full">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm text-gray-600">Noise</label>
+                        <input type="range" id="noise" min="0" max="100" value="0" class="w-full">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm text-gray-600">Pixelate</label>
+                        <input type="range" id="pixelate" min="1" max="20" value="1" class="w-full">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-gray-700">Filters</h3>
+                    <button onclick="applyFilter('grayscale')" class="filter-btn">Grayscale</button>
+                    <button onclick="applyFilter('sepia')" class="filter-btn">Sepia</button>
+                    <button onclick="applyFilter('vintage')" class="filter-btn">Vintage</button>
+                    <button onclick="applyFilter('duotone')" class="filter-btn">Duotone</button>
+                    <button onclick="applyFilter('polaroid')" class="filter-btn">Polaroid</button>
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="font-semibold text-gray-700">Drawing Options</h3>
+                    <input type="color" id="colorPicker" class="w-full h-10 rounded cursor-pointer">
+                    <div class="space-y-1">
+                        <label class="text-sm text-gray-600">Brush Size</label>
+                        <input type="range" id="brushSize" min="1" max="50" value="5" class="w-full">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm text-gray-600">Opacity</label>
+                        <input type="range" id="opacity" min="0" max="100" value="100" class="w-full">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                    <button onclick="resetImage()" class="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mb-2">Reset All</button>
+                    <button onclick="downloadImage()" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .tool-btn {
+            @apply w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition mb-1 text-left;
+        }
+        .filter-btn {
+            @apply w-full px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition mb-1;
+        }
+        input[type="range"] {
+            @apply accent-blue-500;
+        }
+    </style>
+
+    <script>
+        const canvas = new fabric.Canvas('canvas');
+        let originalImage = null;
+        let history = [];
+        let historyIndex = -1;
+        let isDrawingMode = false;
+        let activeFilter = null;
+
+        // History Management
+        function saveState() {
+            const jsonData = canvas.toJSON();
+            history = history.slice(0, historyIndex + 1);
+            history.push(jsonData);
+            historyIndex++;
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                canvas.loadFromJSON(history[historyIndex], canvas.renderAll.bind(canvas));
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                canvas.loadFromJSON(history[historyIndex], canvas.renderAll.bind(canvas));
+            }
+        }
+
+        // File Handling
+        document.getElementById('imageUpload').addEventListener('change', handleFileUpload);
+        const dropZone = document.getElementById('dropZone');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-blue-500');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                loadImage(file);
+            }
+        });
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                loadImage(file);
+            }
+        }
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                fabric.Image.fromURL(event.target.result, (img) => {
+                    canvas.clear();
+                    img.scaleToWidth(canvas.width);
+                    canvas.add(img);
+                    originalImage = img;
+                    canvas.renderAll();
+                    saveState();
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Drawing Tools
+        function enableDrawing() {
+            canvas.isDrawingMode = !canvas.isDrawingMode;
+            if (canvas.isDrawingMode) {
+                canvas.freeDrawingBrush.color = document.getElementById('colorPicker').value;
+                canvas.freeDrawingBrush.width = parseInt(document.getElementById('brushSize').value);
+                canvas.freeDrawingBrush.opacity = parseInt(document.getElementById('opacity').value) / 100;
+            }
+        }
+
+        function enableEraser() {
+            canvas.isDrawingMode = true;
+            canvas.freeDrawingBrush.color = '#ffffff';
+            canvas.freeDrawingBrush.width = parseInt(document.getElementById('brushSize').value);
+        }
+
+        // Text Tool
+        function addText() {
+            const text = new fabric.IText('Double click to edit', {
+                left: 100,
+                top: 100,
+                fontFamily: 'Arial',
+                fill: document.getElementById('colorPicker').value,
+                fontSize: 20
+            });
+            canvas.add(text);
+            canvas.setActiveObject(text);
+            saveState();
+        }
+
+        // Shape Tools
+        function addShape(type) {
+            let shape;
+            const color = document.getElementById('colorPicker').value;
+            
+            switch(type) {
+                case 'rect':
+                    shape = new fabric.Rect({
+                        left: 100,
+                        top: 100,
+                        width: 100,
+                        height: 100,
+                        fill: color
+                    });
+                    break;
+                case 'circle':
+                    shape = new fabric.Circle({
+                        left: 100,
+                        top: 100,
+                        radius: 50,
+                        fill: color
+                    });
+                    break;
+                case 'triangle':
+                    shape = new fabric.Triangle({
+                        left: 100,
+                        top: 100,
+                        width: 100,
+                        height: 100,
+                        fill: color
+                    });
+                    break;
+                case 'line':
+                    shape = new fabric.Line([50, 50, 150, 50], {
+                        stroke: color,
+                        strokeWidth: 2
+                    });
+                    break;
+            }
+            
+            canvas.add(shape);
+            canvas.setActiveObject(shape);
+            saveState();
+        }
+
+        // Image Adjustments
+        document.getElementById('brightness').addEventListener('input', adjustImage);
+        document.getElementById('contrast').addEventListener('input', adjustImage);
+        document.getElementById('saturation').addEventListener('input', adjustImage);
+        document.getElementById('blur').addEventListener('input', adjustImage);
+        document.getElementById('noise').addEventListener('input', adjustImage);
+        document.getElementById('pixelate').addEventListener('input', adjustImage);
+
+        function adjustImage() {
+            if (!originalImage) return;
+
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const saturation = document.getElementById('saturation').value;
+            const blur = document.getElementById('blur').value;
+            const noise = document.getElementById('noise').value;
+            const pixelate = document.getElementById('pixelate').value;
+
+            originalImage.filters = [
+                new fabric.Image.filters.Brightness({ brightness: parseInt(brightness) / 100 }),
+                new fabric.Image.filters.Contrast({ contrast: parseInt(contrast) / 100 }),
+                new fabric.Image.filters.Saturation({ saturation: parseInt(saturation) / 100 }),
+                new fabric.Image.filters.Blur({ blur: parseFloat(blur) / 10 }),
+                new fabric.Image.filters.Noise({ noise: parseInt(noise) }),
+                new fabric.Image.filters.Pixelate({ blocksize: parseInt(pixelate) })
+            ];
+
+            if (activeFilter) {
+                originalImage.filters.push(activeFilter);
+            }
+
+            originalImage.applyFilters();
+            canvas.renderAll();
+        }
+
+        // Filters
+        function applyFilter(type) {
+            if (!originalImage) return;
+
+            switch(type) {
+                case 'grayscale':
+                    activeFilter = new fabric.Image.filters.Grayscale();
+                    break;
+                case 'sepia':
+                    activeFilter = new fabric.Image.filters.Sepia();
+                    break;
+                case 'vintage':
+                    activeFilter = new fabric.Image.filters.Vintage();
+                    break;
+                case 'duotone':
+                    activeFilter = new fabric.Image.filters.BlendColor({
+                        color: '#ff0000',
+                        mode: 'multiply'
+                    });
+                    break;
+                case 'polaroid':
+                    activeFilter = new fabric.Image.filters.Composed([
+                        new fabric.Image.filters.Contrast({ contrast: 0.1 }),
+                        new fabric.Image.filters.Saturation({ saturation: -0.2 }),
+                        new fabric.Image.filters.Brightness({ brightness: 0.1 })
+                    ]);
+                    break;
+            }
+
+            adjustImage();
+            saveState();
+        }
+
+        // Transform Functions
+        function rotateImage(angle) {
+            if (!originalImage) return;
+            originalImage.rotate(originalImage.angle + angle);
+            canvas.renderAll();
+            saveState();
+        }
+
+        function flipImage(axis) {
+            if (!originalImage) return;
+            if (axis === 'x') {
+                originalImage.flipX = !originalImage.flipX;
+            } else {
+                originalImage.flipY = !originalImage.flipY;
+            }
+            canvas.renderAll();
+            saveState();
+        }
+
+        // Crop Function
+        let cropper = null;
+        function enableCrop() {
+            if (!originalImage) return;
+            
+            const imgElement = document.createElement('img');
+            imgElement.src = canvas.toDataURL();
+            
+            const cropperModal = document.createElement('div');
+            cropperModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center';
+            cropperModal.innerHTML = `
+                <div class="bg-white p-4 rounded-lg">
+                    <div class="max-w-2xl max-h-[80vh] overflow-auto">
+                        <img id="cropperImage" src="${imgElement.src}" style="max-width: 100%;">
+                    </div>
+                    <div class="mt-4 flex justify-end space-x-2">
+                        <button class="px-4 py-2 bg-gray-500 text-white rounded" onclick="cancelCrop()">Cancel</button>
+                        <button class="px-4 py-2 bg-blue-500 text-white rounded" onclick="applyCrop()">Apply</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(cropperModal);
+            
+            cropper = new Cropper(document.getElementById('cropperImage'), {
+                aspectRatio: NaN,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+            });
+        }
+
+        function cancelCrop() {
+            const modal = document.querySelector('.fixed');
+            if (modal) {
+                modal.remove();
+            }
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+
+        function applyCrop() {
+            if (!cropper) return;
+            
+            const croppedCanvas = cropper.getCroppedCanvas();
+            fabric.Image.fromURL(croppedCanvas.toDataURL(), function(img) {
+                canvas.clear();
+                canvas.add(img);
+                originalImage = img;
+                cancelCrop();
+                saveState();
+            });
+        }
+
+        // Reset Function
+        function resetImage() {
+            if (!originalImage) return;
+            originalImage.filters = [];
+            originalImage.rotate(0);
+            originalImage.flipX = false;
+            originalImage.flipY = false;
+            originalImage.applyFilters();
+            
+            // Reset all sliders
+            document.getElementById('brightness').value = 0;
+            document.getElementById('contrast').value = 0;
+            document.getElementById('saturation').value = 0;
+            document.getElementById('blur').value = 0;
+            document.getElementById('noise').value = 0;
+            document.getElementById('pixelate').value = 1;
+            
+            activeFilter = null;
+            canvas.renderAll();
+            saveState();
+        }
+
+        // Download Function
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'edited-image.png';
+            link.href = canvas.toDataURL({
+                format: 'png',
+                quality: 1
+            });
+            link.click();
+        }
+
+        // Initialize drawing brush properties
+        canvas.freeDrawingBrush.color = document.getElementById('colorPicker').value;
+        canvas.freeDrawingBrush.width = parseInt(document.getElementById('brushSize').value);
+        
+        // Event listeners for brush properties
+        document.getElementById('colorPicker').addEventListener('input', (e) => {
+            canvas.freeDrawingBrush.color = e.target.value;
+        });
+        
+        document.getElementById('brushSize').addEventListener('input', (e) => {
+            canvas.freeDrawingBrush.width = parseInt(e.target.value);
+        });
+        
+        document.getElementById('opacity').addEventListener('input', (e) => {
+            canvas.freeDrawingBrush.opacity = parseInt(e.target.value) / 100;
+        });
+
+        // Save initial state
+        saveState();
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</body>
+</html>
